@@ -26,6 +26,7 @@ const bookingBike = asyncHandler(async (req, res) => {
       model: bikeToBeBooked.model,
       color: bikeToBeBooked.color,
       isAvailable: false,
+      location:bikeToBeBooked.location,
       avgRating: bikeToBeBooked.avgRating,
       bookingStatus: "booked",
       bikeId: bikeToBeBooked._id,

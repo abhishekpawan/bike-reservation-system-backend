@@ -66,6 +66,13 @@ const getBikes = asyncHandler(async (req, res) => {
       }
       return res.status(200).send(filteredBikes);
     }
+    const totalPage = Math.ceil(
+      (await Bike.find()).length / parseInt(req.query.limit)
+    );
+    const currentPage =
+      parseInt(req.query.skip) === 0
+        ? 1
+        : parseInt(req.query.skip) / parseInt(req.query.limit) + 1;
     const bike = await Bike.find({
       ...bookingStatus,
     })
@@ -75,7 +82,7 @@ const getBikes = asyncHandler(async (req, res) => {
     if (bike.length === 0) {
       return res.status(200).send({ msg: "No bikes available!" });
     }
-    res.status(200).send(bike);
+    res.status(200).send({ bike, totalPage,currentPage });
   } catch (error) {
     res.status(500).send();
   }
@@ -88,7 +95,14 @@ const updateBike = asyncHandler(async (req, res) => {
   const _id = req.params.id;
 
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["model", "color", "location", "isAvailable", "avgRating", "image"];
+  const allowedUpdates = [
+    "model",
+    "color",
+    "location",
+    "isAvailable",
+    "avgRating",
+    "image",
+  ];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
