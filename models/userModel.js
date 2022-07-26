@@ -43,7 +43,12 @@ userSchema.virtual('bookedBike', {
     localField: '_id',
     foreignField: 'bookedBy'
 })
-
+//setting up relation to the other collection
+userSchema.virtual('review', {
+    ref:'Review',
+    localField: '_id',
+    foreignField: 'userId'
+})
 
 
 // Delete user's tasks when user is removed

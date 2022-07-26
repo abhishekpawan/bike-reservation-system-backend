@@ -27,7 +27,8 @@ const bikeSchema = mongoose.Schema({
         trim:true,
     },
     image:{
-        type: Buffer
+        type: Buffer,
+        require:true
     }
 },{
     timestamps:true
@@ -36,6 +37,13 @@ const bikeSchema = mongoose.Schema({
 //setting up relation to the other collection
 bikeSchema.virtual('bookedBike', {
     ref:'BookedBike',
+    localField: '_id',
+    foreignField: 'bikeId'
+})
+
+//setting up relation to the other collection
+bikeSchema.virtual('review', {
+    ref:'Review',
     localField: '_id',
     foreignField: 'bikeId'
 })

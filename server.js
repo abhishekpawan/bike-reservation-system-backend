@@ -19,6 +19,6 @@ app.get('/',(req,res)=>{
 app.use("/users", require("./routes/userRoutes"));
 app.use("/bikes", require("./routes/bikeRoutes"));
 app.use("/bookedBikes", require("./routes/bookedBikeRoutes"));
-// app.use("/api/incomes", require("./routes/incomeRoutes"));
+app.use("/reviews", require("./routes/reviewRoutes"));
 
 app.listen(port, () => console.log(`Server started on port ${port}`));

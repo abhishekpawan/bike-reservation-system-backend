@@ -8,6 +8,7 @@ const User = require("../models/userModel");
 const createBike = asyncHandler(async (req, res) => {
   const bike = new Bike({
     ...req.body,
+    // image:req.file.buffer
     // owner:req.user._id
   });
   try {
@@ -37,6 +38,7 @@ const getBike = asyncHandler(async (req, res) => {
 // @desc Get all Bikes
 // @route GET /bikes/
 // @access Private
+// GET /bikes/?avgRating>=3
 // GET /bike/?isAvailable=false
 // GET /bikes/(number of request per page )&skip=20(number of items skiped to jump on next page)
 // GET /bikes/?sortBy=createdAt:asc/desc
@@ -51,6 +53,19 @@ const getBikes = asyncHandler(async (req, res) => {
     sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
   }
   try {
+    if (req.query.avgRating) {
+      const bikes = await Bike.find({
+        ...bookingStatus,
+      });
+      const filteredBikes = bikes.filter((bike) => {
+        return bike.avgRating >= parseInt(req.query.avgRating);
+      });
+
+      if (filteredBikes.length === 0) {
+        return res.status(200).send({ msg: "No Bikes available!" });
+      }
+      return res.status(200).send(filteredBikes);
+    }
     const bike = await Bike.find({
       ...bookingStatus,
     })
