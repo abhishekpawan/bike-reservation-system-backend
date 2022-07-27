@@ -89,7 +89,7 @@ const getUser = asyncHandler(async (req, res) => {
     }
     res.status(200).send(user);
   } catch (error) {
-    res.status(500).send();
+    res.status(500).send({error});
   }
 });
 
@@ -112,7 +112,7 @@ const updateUser = asyncHandler(async (req, res) => {
     await req.user.save();
     res.status(200).send(req.user);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).send({error});
   }
 });
 

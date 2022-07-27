@@ -30,6 +30,18 @@ const bookedBikeSchema = mongoose.Schema({
         type:String,
         trim:true
     },
+    startDate:{
+        type:String,
+        require:true
+    },
+    endDate:{
+        type:String,
+        require:true
+    },
+    isReviewed:{
+        type:Boolean,
+        default:false  
+    },
     bikeId:{
         type: mongoose.Schema.Types.ObjectId,
         required: true,

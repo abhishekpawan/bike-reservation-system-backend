@@ -14,6 +14,8 @@ const createReview = asyncHandler(async (req, res) => {
     userId: req.user._id,
     bikeId: req.params.id,
   });
+  console.log(req.body);
+  console.log(review);
   try {
     //setting the avgRating of the bike accordidng to all the avaialable reviws + new added review
     const reviewdBike = await Bike.findById(req.params.id)
@@ -30,7 +32,7 @@ const createReview = asyncHandler(async (req, res) => {
     await review.save();
     res.status(201).send(review);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).send({error});
   }
 });
 
@@ -77,6 +79,16 @@ const getReviews = asyncHandler(async (req, res) => {
       }
       return res.status(200).send(filteredReviews);
     }
+
+    const totalPage = Math.ceil(
+      (await Review.find({
+        bikeId: req.params.id,
+      })).length / parseInt(req.query.limit)
+    );
+    const currentPage =
+      parseInt(req.query.skip) === 0
+        ? 1
+        : parseInt(req.query.skip) / parseInt(req.query.limit) + 1;
     const review = await Review.find({
       bikeId: req.params.id,
     })
@@ -86,9 +98,9 @@ const getReviews = asyncHandler(async (req, res) => {
     if (review.length === 0) {
       return res.status(200).send({ msg: "No Reviews available!" });
     }
-    res.status(200).send(review);
+    res.status(200).send({review, totalPage,currentPage });
   } catch (error) {
-    res.status(500).send();
+    res.status(500).send({error});
   }
 });
 

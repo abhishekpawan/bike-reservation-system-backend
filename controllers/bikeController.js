@@ -15,7 +15,7 @@ const createBike = asyncHandler(async (req, res) => {
     await bike.save();
     res.status(201).send(bike);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).send({ error });
   }
 });
 
@@ -31,7 +31,7 @@ const getBike = asyncHandler(async (req, res) => {
     }
     res.status(200).send(bike);
   } catch (error) {
-    res.status(500).send();
+    res.status(500).send({ error });
   }
 });
 
@@ -53,19 +53,86 @@ const getBikes = asyncHandler(async (req, res) => {
     sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
   }
   try {
+    //search bikes according to model and location and color
+    if (req.query.search) {
+      
+      const searchedBikesFullList = await Bike.find({
+       "$or": [
+          { model:{$regex:req.query.search}  },
+          { color:{$regex:req.query.search}  },
+          { location:{$regex:req.query.search}  },
+        ],
+      });
+
+      const totalPage = Math.ceil(
+        searchedBikesFullList.length / parseInt(req.query.limit)
+      );
+      const currentPage =
+        parseInt(req.query.skip) === 0
+          ? 1
+          : parseInt(req.query.skip) / parseInt(req.query.limit) + 1;
+
+      const searchedBikes = await Bike.find({
+        ...bookingStatus,
+        "$or": [
+           { model:{$regex:req.query.search}  },
+           { color:{$regex:req.query.search}  },
+           { location:{$regex:req.query.search}  },
+         ],
+       })
+       .limit(req.query.limit)
+        .skip(req.query.skip)
+        .sort(sort);;
+
+
+
+      if (searchedBikes.length === 0) {
+        return res.status(200).send({ msg: "No bikes available!" });
+      }
+      res.status(200).send({ bike: searchedBikes,totalPage,currentPage });
+    }
+
+    
+    //filtering bikes according to avgRating
     if (req.query.avgRating) {
-      const bikes = await Bike.find({
+      //calculating total pages of filtered bikes by avg rating
+      const bikes1 = await Bike.find({
         ...bookingStatus,
       });
-      const filteredBikes = bikes.filter((bike) => {
+      const filteredBikesByAvgRating = bikes1.filter((bike) => {
+        return bike.avgRating >= parseInt(req.query.avgRating);
+      });
+
+      const totalPage = Math.ceil(
+        filteredBikesByAvgRating.length / parseInt(req.query.limit)
+      );
+      const currentPage =
+        parseInt(req.query.skip) === 0
+          ? 1
+          : parseInt(req.query.skip) / parseInt(req.query.limit) + 1;
+
+      //filtering bikes according to avgRating
+      const bikes2 = await Bike.find({
+        ...bookingStatus,
+      })
+        .limit(req.query.limit)
+        .skip(req.query.skip)
+        .sort(sort);
+
+      const filteredBikes = bikes2.filter((bike) => {
         return bike.avgRating >= parseInt(req.query.avgRating);
       });
 
       if (filteredBikes.length === 0) {
         return res.status(200).send({ msg: "No Bikes available!" });
       }
-      return res.status(200).send(filteredBikes);
+
+      return res
+        .status(200)
+        .send({ bike: filteredBikes, totalPage, currentPage });
     }
+
+    //calculating total pages of bikes
     const totalPage = Math.ceil(
       (await Bike.find()).length / parseInt(req.query.limit)
     );
@@ -73,6 +140,7 @@ const getBikes = asyncHandler(async (req, res) => {
       parseInt(req.query.skip) === 0
         ? 1
         : parseInt(req.query.skip) / parseInt(req.query.limit) + 1;
+
     const bike = await Bike.find({
       ...bookingStatus,
     })
@@ -82,9 +150,9 @@ const getBikes = asyncHandler(async (req, res) => {
     if (bike.length === 0) {
       return res.status(200).send({ msg: "No bikes available!" });
     }
-    res.status(200).send({ bike, totalPage,currentPage });
+    res.status(200).send({ bike, totalPage, currentPage });
   } catch (error) {
-    res.status(500).send();
+    res.status(500).send({ error });
   }
 });
 
@@ -119,7 +187,7 @@ const updateBike = asyncHandler(async (req, res) => {
     await bike.save();
     res.status(200).send(bike);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).send({ error });
   }
 });
 
@@ -135,7 +203,7 @@ const deleteBike = asyncHandler(async (req, res) => {
     }
     res.status(200).send({ bike, msg: "Bike succesfully deleted" });
   } catch (error) {
-    res.status(500).send();
+    res.status(500).send({ error });
   }
 });
 

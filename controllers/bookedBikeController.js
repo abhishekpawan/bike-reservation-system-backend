@@ -26,9 +26,12 @@ const bookingBike = asyncHandler(async (req, res) => {
       model: bikeToBeBooked.model,
       color: bikeToBeBooked.color,
       isAvailable: false,
-      location:bikeToBeBooked.location,
+      location: bikeToBeBooked.location,
       avgRating: bikeToBeBooked.avgRating,
       bookingStatus: "booked",
+      startDate: req.body.startDate,
+      endDate: req.body.endDate,
+      isReviewed: false,
       bikeId: bikeToBeBooked._id,
       bookedBy: req.user._id,
       image: bikeToBeBooked.image,
@@ -36,7 +39,7 @@ const bookingBike = asyncHandler(async (req, res) => {
     await bookedBike.save();
     res.status(200).send(bookedBike);
   } catch (error) {
-    res.status(500).send();
+    res.status(500).send({ error });
   }
 });
 
@@ -60,6 +63,13 @@ const getAllBookedBikes = asyncHandler(async (req, res) => {
   }
 
   try {
+    const totalPage = Math.ceil(
+      (await BookedBike.find({bookedBy: req.user._id,})).length / parseInt(req.query.limit)
+    );
+    const currentPage = parseInt(req.query.skip) === 0
+        ? 1
+        : parseInt(req.query.skip) / parseInt(req.query.limit) + 1;
+
     const bookedBike = await BookedBike.find({
       ...bookedStatus,
       bookedBy: req.user._id,
@@ -67,9 +77,13 @@ const getAllBookedBikes = asyncHandler(async (req, res) => {
       .limit(req.query.limit)
       .skip(req.query.skip)
       .sort(sort);
-    res.status(200).send(bookedBike);
+
+    if (bookedBike.length === 0) {
+      return res.status(200).send({ msg: "No bikes available!" });
+    }
+    res.status(200).send({ bookedBike, totalPage, currentPage });
   } catch (error) {
-    res.status(500).send();
+    res.status(500).send({ error });
   }
 });
 
@@ -80,7 +94,12 @@ const updateBookedBike = asyncHandler(async (req, res) => {
   const _id = req.params.id;
 
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["bookingStatus", "isAvailable","avgRating"];
+  const allowedUpdates = [
+    "bookingStatus",
+    "isAvailable",
+    "avgRating",
+    "isReviewed",
+  ];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
@@ -108,7 +127,7 @@ const updateBookedBike = asyncHandler(async (req, res) => {
 
     res.status(200).send(bookedBike);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).send({ error });
   }
 });
 
@@ -124,7 +143,7 @@ const deleteBookedBike = asyncHandler(async (req, res) => {
     }
     res.status(200).send({ bike, msg: "Bike succesfully deleted" });
   } catch (error) {
-    res.status(500).send();
+    res.status(500).send({ error });
   }
 });
 
